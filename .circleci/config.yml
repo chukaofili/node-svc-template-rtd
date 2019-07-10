@@ -25,7 +25,6 @@ workflows:
           environment: dev
           secrets-from-namespace: development
           hostname-suffix: godutch.live
-          deploy-secrets: false
           requires:
             - tests
           filters:
@@ -41,7 +40,6 @@ workflows:
           environment: dev
           hostname-suffix: godutch.live
           tag-stable: true
-          deploy-secrets: false
           requires:
             - tests
           filters:
@@ -57,7 +55,6 @@ workflows:
           environment: staging
           hostname-suffix: godutch.live
           tag-stable: true
-          deploy-secrets: false
           filters:
             tags:
               only: /^v.*/
@@ -95,4 +92,5 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
+
       
