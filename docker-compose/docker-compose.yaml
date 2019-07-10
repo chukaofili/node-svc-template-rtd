@@ -1,0 +1,16 @@
+version: "3.5"
+services:
+  users-svc:
+    build: ./../
+    env_file:
+      - ./.env.config
+      - ./.env.secrets
+    volumes:
+      - "./../app:/www"
+    ports:
+      - 3000:3000
+    networks:
+      - default
+networks:
+  default:
+    name: docker_default

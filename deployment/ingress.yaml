@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: __SERVICE_NAME__
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  tls:
+  - hosts:
+      - __HOSTNAME__
+    secretName: wildcard-certificate-tls
+  rules:
+  - host: __HOSTNAME__
+    http:
+      paths:
+      - backend:
+          serviceName: __SERVICE_NAME__
+          servicePort: 80

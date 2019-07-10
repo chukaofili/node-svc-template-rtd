@@ -1,0 +1,15 @@
+.vscode
+**/*.env
+**/*service-account.json
+app/.editorconfig
+app/.env.example
+app/.eslintrc
+app/.gitignore
+app/.jsbeautifyrc
+app/.yarn-error.log
+app/.yo-rc.json
+app/client
+app/node_modules
+app/package-lock.json
+app/test
+app/yarn-cache.tgz

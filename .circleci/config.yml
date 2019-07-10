@@ -1,0 +1,233 @@
+version: 2.1
+
+orbs:
+  gcp-utils: chuka/gcp-utils@1.29.1
+
+workflows:
+  version: 2
+  deployments:
+    jobs:
+      - gcp-utils/run-tests:
+          working-dir: api
+          default-db-name: cpc_users_test
+          job-db-name: cpc_photos_test
+          test-block:
+            - run:
+                name: Run Tests
+                command: |
+                  cd api
+                  NODE_ENV=test yarn create-db
+                  yarn test:full
+                environment:
+                  DATABASE_URL: "postgres://postgres@localhost:5432/cpc_users_test"
+      - gcp-utils/deploy-pr:
+          name: deploy-pr
+          context: canon-cpc
+          gke-cluster: canon-cpc
+          image: users-svc
+          tag: $CIRCLE_SHA1
+          environment: dev
+          secrets-from-namespace: canon-dev
+          hostname-suffix: canon-cpc.gigsternetwork.com
+          path-to-templates: "./deployment/templates"
+          path-to-manifests: "./deployment"
+          db-instance: canon-cpc:us-east1:canon-cpc-prs
+          deploy-job: false
+          path-to-jobs-manifest: "jobs/cronjobs.yaml"
+          requires:
+            - gcp-utils/run-tests
+          filters:
+            branches:
+              only: /feature\/.*/
+      - gcp-utils/deploy-adhoc-svc:
+          name: deploy-adhoc-photos-svc
+          context: canon-cpc
+          gke-cluster: canon-cpc
+          db-instance: canon-cpc:us-east1:canon-cpc-prs
+          service-repo: git@github.com:gigster-eng/canonphotocommunity-photos.git
+          service-name: photos-svc
+          original-service-name: users-svc
+          hostname-suffix: canon-cpc.gigsternetwork.com
+          environment: dev
+          requires:
+            - deploy-pr
+          filters:
+            branches:
+              only: /feature\/.*/
+      - gcp-utils/deploy-adhoc-svc:
+          name: deploy-adhoc-gateway-svc
+          context: canon-cpc
+          gke-cluster: canon-cpc
+          db-instance: canon-cpc:us-east1:canon-cpc-prs
+          service-repo: git@github.com:gigster-eng/canonphotocommunity-gateway.git
+          service-name: gateway-svc
+          original-service-name: users-svc
+          hostname-suffix: canon-cpc.gigsternetwork.com
+          environment: dev
+          requires:
+            - deploy-pr
+          filters:
+            branches:
+              only: /feature\/.*/
+      - gcp-utils/notify:
+          context: canon-cpc
+          title: ${CIRCLE_PULL_REQUEST}
+          title-link: ${CIRCLE_PULL_REQUEST}
+          original-service-name: users-svc
+          pr: true
+          message: 'PR deployed successfully \n
+          users-svc: https://${NAMESPACE_NAME}.canon-cpc.gigsternetwork.com \n
+          photos-svc: https://${NAMESPACE_NAME}-photos.canon-cpc.gigsternetwork.com \n
+          gateway-svc: https://${NAMESPACE_NAME}-gateway.canon-cpc.gigsternetwork.com'
+          requires:
+            - deploy-pr
+            - deploy-adhoc-photos-svc
+            - deploy-adhoc-gateway-svc
+          filters:
+            branches:
+              only: /feature\/.*/
+      - gcp-utils/deployment:
+          name: deploy-development
+          context: canon-cpc
+          gke-cluster: canon-cpc
+          image: users-svc # pass service name here
+          tag: $CIRCLE_SHA1
+          namespace: canon-dev
+          environment: dev
+          hostname-suffix: canon-cpc.gigsternetwork.com
+          path-to-manifests: "./deployment"
+          path-to-jobs-manifest: "jobs/cronjobs.yaml"
+          db-instance: canon-cpc:us-east1:canon-cpc-dev
+          deploy-job: true
+          tag-stable: true
+          requires:
+            - gcp-utils/run-tests
+          filters:
+            branches:
+              only: develop
+      - gcp-utils/deployment:
+          name: deploy-uat
+          context: canon-cpc
+          gke-cluster: canon-cpc
+          image: users-svc # pass service name here
+          tag: $CIRCLE_SHA1
+          namespace: canon-uat
+          environment: uat
+          hostname-suffix: canon-cpc.gigsternetwork.com
+          path-to-manifests: "./deployment"
+          path-to-jobs-manifest: "jobs/cronjobs.yaml"
+          db-instance: canon-cpc:us-east1:canon-cpc-uat
+          deploy-job: true
+          tag-stable: true
+          requires:
+            - gcp-utils/run-tests
+          filters:
+            branches:
+              only: master
+      - gcp-utils/deployment:
+          name: deploy-staging
+          context: merkle-cncm-staging
+          gke-cluster: canon-staging
+          image: users # pass service name here
+          tag: $CIRCLE_TAG
+          namespace: canon-staging
+          environment: staging
+          hostname-suffix: dtp-community.stg.usa.canon.com
+          deploy-job: true
+          path-to-manifests: "./deployment"
+          path-to-jobs-manifest: "jobs/cronjobs.yaml"
+          db-instance: merkle-cncm-staging:us-east1:canon-staging-db
+          auto-deploy: true
+          tag-stable: true
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - gcp-utils/build-and-push:
+          name: build-push-prod
+          context: merkle-cncm-prod
+          gke-cluster: canon-prod
+          image: users # pass service name here
+          tag: $CIRCLE_TAG
+          tag-stable: true
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      # - approval-hold-prod:
+      #     type: approval
+      #     requires:
+      #       - build-push-prod
+      # - gcp-utils/deploy-tag:
+      #     name: deploy-prod
+      #     context: merkle-cncm-prod
+      #     gke-cluster: canon-prod
+      #     image: users # pass service name here
+      #     tag: $CIRCLE_TAG
+      #     namespace: canon-prod
+      #     environment: prod
+      #     hostname-suffix: dtp-community.usa.canon.com
+      #     deploy-job: true
+      #     path-to-manifests: "./deployment"
+      #     path-to-jobs-manifest: "jobs/cronjobs.yaml"
+      #     db-instance: merkle-cncm-prod:us-east1:canon-prod
+      #     alt-ingress: true
+      #     alt-shared-cert: users-dtp-community-usa-canon-com-exp20200509
+      #     requires:
+      #       - approval-hold-prod
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #       branches:
+      #         ignore: /.*/
+      - gcp-utils/restart-svc:
+          name: retart-gateway-dev
+          context: canon-cpc
+          gke-cluster: canon-cpc
+          deployment-to-restart: gateway-svc
+          namespace: canon-dev
+          requires:
+            - deploy-development
+          filters:
+            branches:
+              only: develop
+      - gcp-utils/restart-svc:
+          name: retart-gateway-uat
+          context: canon-cpc
+          gke-cluster: canon-cpc
+          deployment-to-restart: gateway-svc
+          namespace: canon-uat
+          requires:
+            - deploy-uat
+          filters:
+            branches:
+              only: master
+      - gcp-utils/restart-svc:
+          name: retart-gateway-staging
+          context: merkle-cncm-staging
+          gke-cluster: canon-staging
+          deployment-to-restart: api-gateway
+          namespace: canon-staging
+          requires:
+            - deploy-staging
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      # - gcp-utils/restart-svc: #Enable when deploying to prod
+      #     name: retart-gateway-prod
+      #     context: merkle-cncm-prod
+      #     gke-cluster: canon-prod
+      #     deployment-to-restart: api-gateway
+      #     namespace: canon-prod
+      #     requires:
+      #       - deploy-prod
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #       branches:
+      #         ignore: /.*/
+      

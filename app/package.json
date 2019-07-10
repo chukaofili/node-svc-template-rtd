@@ -1,0 +1,24 @@
+{
+  "name": "node-svc",
+  "version": "1.0.0",
+  "description": "node-svc example nodejs app layout",
+  "main": "index.js",
+  "repository": "https://github.com/chukaofili/node-svc-template",
+  "author": "Chuka Ofili",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "scripts": {
+    "dev": "NODE_ENV=development ./node_modules/nodemon/bin/nodemon.js .",
+    "start": "node index.js",
+    "test": "NODE_ENV=test ./node_modules/mocha/bin/mocha 'test/**/*.test.js' --exit"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
+    "mocha": "^6.1.4",
+    "nodemon": "^1.19.1"
+  }
+}
