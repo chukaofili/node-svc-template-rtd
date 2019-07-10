@@ -19,7 +19,7 @@ composer.lock
 
 # Project Specific
 coverage
-node_modules
+app/node_modules
 *.log
 *.tgz
 
