@@ -72,7 +72,7 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
-      - approval-hold-prod:
+      - approval:
           type: approval
           requires:
             - build-push-prod
@@ -86,11 +86,5 @@ workflows:
           environment: production
           hostname-suffix: godutch.live
           requires:
-            - approval-hold-prod
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-
+            - approval
       
