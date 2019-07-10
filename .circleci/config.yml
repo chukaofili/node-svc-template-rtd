@@ -25,8 +25,7 @@ workflows:
           environment: dev
           secrets-from-namespace: development
           hostname-suffix: godutch.live
-          path-to-templates: "./deployment/templates"
-          path-to-manifests: "./deployment"
+          deploy-secrets: false
           requires:
             - tests
           filters:
@@ -41,8 +40,8 @@ workflows:
           namespace: development
           environment: dev
           hostname-suffix: godutch.live
-          path-to-manifests: "./deployment"
           tag-stable: true
+          deploy-secrets: false
           requires:
             - tests
           filters:
@@ -57,9 +56,8 @@ workflows:
           namespace: staging
           environment: staging
           hostname-suffix: godutch.live
-          path-to-manifests: "./deployment"
-          auto-deploy: true
           tag-stable: true
+          deploy-secrets: false
           filters:
             tags:
               only: /^v.*/
@@ -90,7 +88,6 @@ workflows:
           namespace: production
           environment: production
           hostname-suffix: godutch.live
-          path-to-manifests: "./deployment"
           requires:
             - approval-hold-prod
           filters:
