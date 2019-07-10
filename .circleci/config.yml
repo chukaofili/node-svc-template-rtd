@@ -55,6 +55,8 @@ workflows:
           environment: staging
           hostname-suffix: godutch.live
           tag-stable: true
+          requires:
+            - tests
           filters:
             branches:
               only: master
@@ -70,10 +72,6 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
-      - approval:
-          type: approval
-          requires:
-            - build-push-prod
       - gke-utils/deploy-tag:
           name: deploy-prod
           context: ms-clients
@@ -84,7 +82,7 @@ workflows:
           environment: production
           hostname-suffix: godutch.live
           requires:
-            - approval
+            - build-push-prod
           filters:
             tags:
               only: /^v.*/
