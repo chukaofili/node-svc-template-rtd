@@ -56,10 +56,8 @@ workflows:
           hostname-suffix: godutch.live
           tag-stable: true
           filters:
-            tags:
-              only: /^v.*/
             branches:
-              ignore: /.*/
+              only: master
       - gke-utils/build-and-push:
           name: build-push-prod
           context: ms-clients
@@ -87,4 +85,9 @@ workflows:
           hostname-suffix: godutch.live
           requires:
             - approval
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
       
