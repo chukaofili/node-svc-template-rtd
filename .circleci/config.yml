@@ -55,6 +55,8 @@ workflows:
           environment: staging
           hostname-suffix: godutch.live
           tag-stable: true
+          requires:
+            - tests
           filters:
             branches:
               only: master
