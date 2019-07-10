@@ -50,7 +50,7 @@ workflows:
           context: ms-clients
           gke-cluster: goliath
           image: node-svc # pass service name here
-          tag: $CIRCLE_TAG
+          tag: $CIRCLE_SHA1
           namespace: staging
           environment: staging
           hostname-suffix: godutch.live
