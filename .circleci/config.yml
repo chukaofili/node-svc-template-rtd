@@ -60,19 +60,7 @@ workflows:
           filters:
             branches:
               only: master
-      - gke-utils/build-and-push:
-          name: build-push-prod
-          context: ms-clients
-          gke-cluster: goliath
-          image: node-svc # pass service name here
-          tag: $CIRCLE_TAG
-          tag-stable: true
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-      - gke-utils/deploy-tag:
+      - gke-utils/deployment:
           name: deploy-prod
           context: ms-clients
           gke-cluster: goliath
@@ -81,8 +69,7 @@ workflows:
           namespace: production
           environment: production
           hostname-suffix: godutch.live
-          requires:
-            - build-push-prod
+          tag-stable: true
           filters:
             tags:
               only: /^v.*/
