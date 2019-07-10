@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  gke-utils: chuka/gke-utils@dev:1.0.0
+  gke-utils: chuka/gke-utils@1.0.0
 
 workflows:
   version: 2
